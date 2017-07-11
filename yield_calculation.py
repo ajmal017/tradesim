@@ -11,12 +11,13 @@ import datetime
 import time
 import csv
 
-# custom
+# Scientific computing package
 import numpy as np
 #from matplotlib.finance import parse_yahoo_historical
+# Data Analysis library
 import pandas as pd
 
-# user
+# Custom librairies
 import Bar
 from finance_utils import *
 
@@ -51,7 +52,7 @@ def getVolume(barArray):
 
 def setPortfolioTable(csvFile):
     try:
-        df = pd.read_csv(csvFile, index_col='Date', parse_dates=True)
+        df = pd.read_csv(csvFile, index_col='Date', parse_dates=True, delimiter=',', encoding="utf-8-sig")
         
         return df
      
@@ -225,11 +226,36 @@ class CStockDBMgr:
 
     def validateSymbolData(self, symbol):
         return validateSymbolData(symbolToFilename(symbol, self.basedir))
+        
+class CCalcReturnsStocks:
+    def __init__(self, dataTransactions, startDate=None, endDate=None):
+        if startDate == None:
+            startDate = _defStartDate
+        if endDate == None:
+            endDate = _defEndDate
+        self.dataTransactions = dataTransactions
+        self.startDate = startDate
+        self.endDate = endDate
+        # Select the year
+        #self.year = endDate.split("/")[2]
+
+    def getAnnualReturn(self):
+        #return getAnnualReturn(self.dataTransactions, self.year)
+        return getPortfolioSnapshot(self.dataTransactions, self.endDate)
+        
 
 #-------------------------------------------------------------------------------
 def _main():
 
-    d = setPortfolioTable('../transactions')
+    # Return the xls file into dataFrame
+    dataTransactions = setPortfolioTable('../transactions.csv')
+    
+    # Set a table for every year
+    
+    
+    # See the portfolio at a specific time
+    table = getPortfolioSnapshot(dataTransactions, '01/01/2016')
+    print table
     
     #db = CStockDBMgr('./stock_db/tsx')
     #db = CStockDBMgr('./stock_db/test')

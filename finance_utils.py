@@ -13,7 +13,13 @@ import os
 import glob
 import urllib
 import datetime
+import time
 
+# Scientific computing package
+import numpy as np
+#from matplotlib.finance import parse_yahoo_historical
+# Data Analysis library
+import pandas as pd
 
 def filenameToSymbol(filename):
     return os.path.basename(filename).replace('.csv', '')
@@ -83,6 +89,68 @@ def downloadData(symbol, basedir, startDate, endDate):
 def updateAllSymbols(basedir, startDate, endDate):
     for s in getAllSymbolsAvailable(basedir):
         downloadData(s, basedir, startDate, endDate)
+
+def getPortfolioSnapshot(dataTransactions, dateParam):
+    snapshotDate = time.strptime(dateParam, "%d/%m/%Y")
+
+    # Create an empty snapshot table
+    snapshotTable = pd.DataFrame(columns = ['Mean cost', 'Number', 'Price'])
+
+    # Fill the snapshot table with all tickers up to the asking date
+    for index, tickerRow in dataTransactions.iterrows():
+        date = str(index).split(' ')[0]
+        ticker = tickerRow['Ticker']
+        buyNb = tickerRow['Buy']
+        sellNb = tickerRow['Sell']
+        cost = tickerRow['Cost']
+        transationDate = time.strptime(date, "%Y-%m-%d")
+
+        # For transactions before or equal to the asking date
+        if  transationDate <= snapshotDate:
+            # Look at all index if the ticker is already there
+            if ticker in snapshotTable.index:
+                # Adjust stocks for the specified ticker
+                if buyNb != 'NaN':
+                    totalNumber =  snapshotTable.loc[ticker]['Number'] + buyNb
+                    meanCost = snapshotTable.loc[ticker]['Mean cost'] * snapshotTable.loc[ticker]['Number'] / totalNumber + cost * buyNb / totalNumber
+                    snapshotTable.at[ticker, 'Number'] = totalNumber
+                    snapshotTable.at[ticker, 'Mean cost'] = meanCost
+
+                if sellNb != 'NaN':
+                    totalNumber = snapshotTable.loc[ticker]['Number'] - sellNb
+                    snapshotTable.at[ticker, 'Number'] = totalNumber
+
+            else:
+                if buyNb != 'NaN':
+                    # Add ticker in the snapshot table
+                    newTicker = pd.DataFrame({'Mean cost':cost, 'Number':buyNb, 'Price':'Nan'}, index = [ticker])
+                    snapshotTable  = snapshotTable.append(newTicker)
+                else:
+                    # Error
+                     print "Error: It is not normal to sell if you do not own"
+
+    # Remove all lines with a share number below one
+    for ticker, tickerRow in snapshotTable.iterrows():
+        if tickerRow['Number'] <= 0:
+            snapshotTable = snapshotTable.drop(ticker)
+
+    return snapshotTable
+
+#def getAnnualReturn(dataTransactions, year):
+    # Create a table
+    # One line contains Ticker name, Mean cost, Price
+
+    # Initialize the table with January 1st  portofolio
+
+    # Update the table with the transactions during the year
+    # Add a line for every sell transaction
+    #for tickerRow in dataTransactions:
+        #if tickerRow[0:1].split("/")[2:3] == year:
+
+    # Get the December 31 price for every line excepted for the Sell transaction
+    # Update the price with the December 31 price list
+
+    # Calculate the annual return for the total of lines
 
 
 def main():
