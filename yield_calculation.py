@@ -52,7 +52,7 @@ def getVolume(barArray):
 
 def setPortfolioTable(csvFile):
     try:
-        df = pd.read_csv(csvFile, index_col='Date', parse_dates=True, delimiter=',', encoding="utf-8-sig")
+        df = pd.read_csv(csvFile, index_col='Date', parse_dates=True, na_values=['nan', 'NaN', 'NAN'])
         
         return df
      
@@ -254,8 +254,13 @@ def _main():
     
     
     # See the portfolio at a specific time
-    table = getPortfolioSnapshot(dataTransactions, '01/01/2016')
-    print table
+    initTable = getPortfolioSnapshot(dataTransactions, '01/01/2016')
+    print initTable
+    
+    # Build a returns value table
+    # Init the table with the initTable and use the dataTransactions table to calculate the total return
+    
+    
     
     #db = CStockDBMgr('./stock_db/tsx')
     #db = CStockDBMgr('./stock_db/test')

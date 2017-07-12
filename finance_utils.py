@@ -21,6 +21,9 @@ import numpy as np
 # Data Analysis library
 import pandas as pd
 
+def isNaN(num):
+    return num != num
+
 def filenameToSymbol(filename):
     return os.path.basename(filename).replace('.csv', '')
 
@@ -91,6 +94,7 @@ def updateAllSymbols(basedir, startDate, endDate):
         downloadData(s, basedir, startDate, endDate)
 
 def getPortfolioSnapshot(dataTransactions, dateParam):
+    # Date we want the portfolio
     snapshotDate = time.strptime(dateParam, "%d/%m/%Y")
 
     # Create an empty snapshot table
@@ -103,6 +107,7 @@ def getPortfolioSnapshot(dataTransactions, dateParam):
         buyNb = tickerRow['Buy']
         sellNb = tickerRow['Sell']
         cost = tickerRow['Cost']
+
         transationDate = time.strptime(date, "%Y-%m-%d")
 
         # For transactions before or equal to the asking date
@@ -110,18 +115,18 @@ def getPortfolioSnapshot(dataTransactions, dateParam):
             # Look at all index if the ticker is already there
             if ticker in snapshotTable.index:
                 # Adjust stocks for the specified ticker
-                if buyNb != 'NaN':
+                if  not isNaN(buyNb):
                     totalNumber =  snapshotTable.loc[ticker]['Number'] + buyNb
                     meanCost = snapshotTable.loc[ticker]['Mean cost'] * snapshotTable.loc[ticker]['Number'] / totalNumber + cost * buyNb / totalNumber
                     snapshotTable.at[ticker, 'Number'] = totalNumber
                     snapshotTable.at[ticker, 'Mean cost'] = meanCost
 
-                if sellNb != 'NaN':
+                if not isNaN(sellNb):
                     totalNumber = snapshotTable.loc[ticker]['Number'] - sellNb
                     snapshotTable.at[ticker, 'Number'] = totalNumber
 
             else:
-                if buyNb != 'NaN':
+                if not isNaN(buyNb):
                     # Add ticker in the snapshot table
                     newTicker = pd.DataFrame({'Mean cost':cost, 'Number':buyNb, 'Price':'Nan'}, index = [ticker])
                     snapshotTable  = snapshotTable.append(newTicker)
