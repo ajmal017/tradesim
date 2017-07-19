@@ -81,6 +81,8 @@ def downloadData(symbol, basedir, startDate, endDate):
     urlFmt = 'http://table.finance.yahoo.com/table.csv?a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&s=%s&y=0&g=%s&ignore=.csv'
 
     url =  urlFmt % (d1[0], d1[1], d1[2], d2[0], d2[1], d2[2], ticker, g)
+    
+    print url
 
     cachename = symbolToFilename(symbol, basedir)
 
@@ -93,12 +95,20 @@ def updateAllSymbols(basedir, startDate, endDate):
     for s in getAllSymbolsAvailable(basedir):
         downloadData(s, basedir, startDate, endDate)
 
+# Get the closing date price
+def getPriceOnDate(ticker, date):
+    # Download the ticker history
+    basedir =  './stock_db/test'
+    downloadData(ticker, basedir, date, date)
+    # Search for the date and get the close price
+    return 0
+
 def getPortfolioSnapshot(dataTransactions, dateParam):
     # Date we want the portfolio
     snapshotDate = time.strptime(dateParam, "%d/%m/%Y")
 
     # Create an empty snapshot table
-    snapshotTable = pd.DataFrame(columns = ['Mean cost', 'Number', 'Price'])
+    snapshotTable = pd.DataFrame(columns=['Mean cost', 'Number', 'Price'])
 
     # Fill the snapshot table with all tickers up to the asking date
     for index, tickerRow in dataTransactions.iterrows():
@@ -111,12 +121,12 @@ def getPortfolioSnapshot(dataTransactions, dateParam):
         transationDate = time.strptime(date, "%Y-%m-%d")
 
         # For transactions before or equal to the asking date
-        if  transationDate <= snapshotDate:
+        if transationDate <= snapshotDate:
             # Look at all index if the ticker is already there
             if ticker in snapshotTable.index:
                 # Adjust stocks for the specified ticker
-                if  not isNaN(buyNb):
-                    totalNumber =  snapshotTable.loc[ticker]['Number'] + buyNb
+                if not isNaN(buyNb):
+                    totalNumber = snapshotTable.loc[ticker]['Number'] + buyNb
                     meanCost = snapshotTable.loc[ticker]['Mean cost'] * snapshotTable.loc[ticker]['Number'] / totalNumber + cost * buyNb / totalNumber
                     snapshotTable.at[ticker, 'Number'] = totalNumber
                     snapshotTable.at[ticker, 'Mean cost'] = meanCost
@@ -139,6 +149,10 @@ def getPortfolioSnapshot(dataTransactions, dateParam):
         if tickerRow['Number'] <= 0:
             snapshotTable = snapshotTable.drop(ticker)
 
+    # For every ticker, set the price values
+    #startDate = datetime.date(2016, 1, 1)
+    #getPriceOnDate('VUS.TO', startDate)
+     
     return snapshotTable
 
 #def getAnnualReturn(dataTransactions, year):
